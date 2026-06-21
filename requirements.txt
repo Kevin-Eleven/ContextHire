@@ -1,0 +1,13 @@
+# Core (Stage 1 — pipeline + ranking, runs within the no-network/CPU budget)
+orjson>=3.9
+numpy>=1.24
+
+# Scoring / recall (Stages 3-5)
+pandas>=2.0
+rank-bm25>=0.2.2
+
+# Embeddings — OFFLINE precompute only (Stage 5). Not imported by rank.py at ranking time.
+sentence-transformers>=2.2
+
+# Metadata / misc
+pyyaml>=6.0
