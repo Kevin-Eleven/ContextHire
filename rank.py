@@ -21,29 +21,20 @@ from ranker import config
 from ranker.features import extract
 from ranker.honeypot import is_honeypot
 from ranker.io import iter_candidates
+from ranker.scoring import score_rubric
 
 
-# --- PLACEHOLDER scoring (replaced in Stage 3+) -----------------------------------------
-def score_candidate(f: dict) -> float:
-    """Transparent stand-in so the pipeline emits a valid ranking. NOT the real model."""
-    yoe = f["years_of_experience"]
-    lo, hi = config.EXP_IDEAL
-    if lo <= yoe <= hi:
-        band = 1.0
-    else:
-        gap = (lo - yoe) if yoe < lo else (yoe - hi)
-        band = max(0.0, 1.0 - gap / 8.0)
-    completeness = f["behavioral"]["profile_completeness"] / 100.0
-    return round(0.9 * band + 0.1 * completeness, 6)
-
-
-def build_reasoning(f: dict, score: float) -> str:
-    """PLACEHOLDER reasoning — grounded in real fields; replaced by Stage 6 templating."""
+def build_reasoning(f: dict, comp: dict) -> str:
+    """Interim reasoning grounded in the rubric components — replaced by Stage 6 templating."""
     title = f["current_title"] or "Unknown role"
-    return (
-        f"{title} with {f['years_of_experience']:.1f} yrs experience; "
-        f"profile {f['behavioral']['profile_completeness']:.0f}% complete."
-    )
+    bits = [f"{title}, {f['years_of_experience']:.1f}y exp"]
+    if comp["evidence"] >= 0.4:
+        bits.append("career shows retrieval/ranking/ML work")
+    if comp["role"] < 0.3:
+        bits.append("title is a poor fit for the role")
+    if comp["penalties"]["consulting"] < 1.0:
+        bits.append("services-firm background")
+    return "; ".join(bits) + "."
 
 
 def _id_num(cid: str) -> int:
@@ -67,11 +58,11 @@ def select_top(path: str, top_n: int) -> list[dict]:
         if is_honeypot(f):
             n_honeypots += 1
             continue
-        score = score_candidate(f)
+        score, comp = score_rubric(f)
         rec = {
             "candidate_id": f["candidate_id"],
             "score": score,
-            "reasoning": build_reasoning(f, score),
+            "reasoning": build_reasoning(f, comp),
         }
         key = (score, -_id_num(f["candidate_id"]))
         if len(heap) < top_n:

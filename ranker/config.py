@@ -10,7 +10,7 @@ import datetime as _dt
 REFERENCE_DATE = _dt.date(2026, 6, 21)
 
 # Default input/output the reproduce_command points at.
-DEFAULT_CANDIDATES = "India_runs_data_and_ai_challenge/candidates.jsonl"
+DEFAULT_CANDIDATES = "candidates.jsonl"
 DEFAULT_OUTPUT = "submission.csv"
 TOP_N = 100
 
