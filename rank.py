@@ -5,9 +5,9 @@
 This is the command declared as `reproduce_command` and must run within the compute budget
 (CPU-only, no network, <=5 min, <=16GB; see constraint.md).
 
-STAGE 1 STATUS: end-to-end plumbing only. Selection/format logic is final, but the score is a
-transparent PLACEHOLDER (experience-band proxy). Stages 2-6 replace `score_candidate` /
-`build_reasoning` with the honeypot filter, JD rubric, behavioral modifier, and real reasoning.
+Cascade: Stage 0 honeypot filter -> positive blend of Stage A semantic recall, Stage B JD rubric,
+Stage C skill-trust -> Stage B penalty factors -> Stage D behavioral multiplier. The top 100 then
+get Stage 6 feature-driven reasoning (deferred until ranks are known so tone can match rank).
 """
 
 from __future__ import annotations
@@ -18,23 +18,24 @@ import heapq
 import time
 
 from ranker import config
+from ranker.behavioral import behavioral_modifier
 from ranker.features import extract
 from ranker.honeypot import is_honeypot
 from ranker.io import iter_candidates
+from ranker.reasoning import generate_reasoning
+from ranker.recall import SemanticIndex
 from ranker.scoring import score_rubric
+from ranker.skill_trust import skill_trust
 
 
-def build_reasoning(f: dict, comp: dict) -> str:
-    """Interim reasoning grounded in the rubric components — replaced by Stage 6 templating."""
-    title = f["current_title"] or "Unknown role"
-    bits = [f"{title}, {f['years_of_experience']:.1f}y exp"]
-    if comp["evidence"] >= 0.4:
-        bits.append("career shows retrieval/ranking/ML work")
-    if comp["role"] < 0.3:
-        bits.append("title is a poor fit for the role")
-    if comp["penalties"]["consulting"] < 1.0:
-        bits.append("services-firm background")
-    return "; ".join(bits) + "."
+def _blend_weights(have_semantic: bool) -> tuple[float, float, float]:
+    """(semantic, rubric, skill_trust) shares summing to 1.0; drop+renormalize if no embeddings."""
+    w = config.WEIGHTS
+    sem, rub, trust = w["semantic"], w["rubric"], w["skill_trust"]
+    if not have_semantic:
+        sem = 0.0
+    total = sem + rub + trust
+    return sem / total, rub / total, trust / total
 
 
 def _id_num(cid: str) -> int:
@@ -52,17 +53,34 @@ def select_top(path: str, top_n: int) -> list[dict]:
     heap: list[tuple] = []
     counter = 0  # unique, keeps heapq from ever comparing the dict payloads
     n_honeypots = 0
+    index = SemanticIndex()  # Stage A: precomputed dense+BM25 fit (numpy-only, may be absent)
+    print("Semantic index:", "loaded" if index.available else "absent (rubric-only fallback)")
+    w_sem, w_rub, w_trust = _blend_weights(index.available)
     for raw in iter_candidates(path):
         f = extract(raw)
         # Stage 0: drop internally-impossible profiles before they can reach the top 100.
         if is_honeypot(f):
             n_honeypots += 1
             continue
-        score, comp = score_rubric(f)
+        _, comp = score_rubric(f)
+        # Stage A + C: blend semantic and skill-trust into the positive side, before penalties.
+        semantic = index.semantic_score(f["candidate_id"]) if index.available else 0.0
+        trust, corroborated = skill_trust(f)
+        comp["semantic"] = semantic
+        positive = w_sem * semantic + w_rub * comp["positive"] + w_trust * trust
+        fit = positive * comp["factor"]
+        # Stage D: bounded availability multiplier on top of fit (never dominates; floor 0.5).
+        mod, avail_notes = behavioral_modifier(f)
+        score = round(fit * mod, 6)
+        # Carry what Stage 6 reasoning needs; generated after ranks are known (tone-match-rank).
         rec = {
             "candidate_id": f["candidate_id"],
             "score": score,
-            "reasoning": build_reasoning(f, comp),
+            "f": f,
+            "comp": comp,
+            "trust": trust,
+            "corroborated": corroborated,
+            "avail_notes": avail_notes,
         }
         key = (score, -_id_num(f["candidate_id"]))
         if len(heap) < top_n:
@@ -74,6 +92,11 @@ def select_top(path: str, top_n: int) -> list[dict]:
     # Final order: best first — score desc, then candidate_id asc (validator tie-break rule).
     ranked = [item[2] for item in heap]
     ranked.sort(key=lambda r: (-r["score"], _id_num(r["candidate_id"])))
+    # Stage 6: reasoning now that each candidate's final rank is fixed.
+    for rank, rec in enumerate(ranked, start=1):
+        rec["reasoning"] = generate_reasoning(
+            rec["f"], rec["comp"], rec["trust"], rec["corroborated"], rec["avail_notes"], rank
+        )
     print(f"Excluded {n_honeypots} honeypot/impossible profiles from contention.")
     return ranked
 

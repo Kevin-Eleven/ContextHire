@@ -17,8 +17,10 @@ venv/
 submission.csv
 *.submission.csv
 
-# Precompute caches — keep small shipped artifacts in data/ explicitly via git add -f
+# Precompute artifacts: the data/*.npy files SHIP in the repo (rank.py needs them at ranking
+# time, no network) — only ignore scratch .tmp files and the build log.
 data/*.npy.tmp
+precompute.log
 Idea Submission Template _ Redrob.pptx
 constraints.
 

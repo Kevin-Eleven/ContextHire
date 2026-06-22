@@ -217,5 +217,7 @@ def score_rubric(f: dict) -> tuple[float, dict]:
         factor *= v
 
     comp["penalties"] = penalties
+    comp["positive"] = positive  # pre-penalty fit; Stage A blends semantic in here
+    comp["factor"] = factor  # combined penalty multiplier
     score = round(max(1e-6, positive * factor), 6)
     return score, comp
