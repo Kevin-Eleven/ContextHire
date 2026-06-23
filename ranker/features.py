@@ -76,7 +76,7 @@ def extract(raw: dict) -> dict:
 
     # --- skills with corroboration fields ---
     assess = sig.get("skill_assessment_scores", {}) or {}
-    # Also using the redrob signals skill assesment scores
+    # Also using the redrob signals skill assessment scores
     skill_list = []
     for s in skills:
         name = (s.get("name") or "").strip()
