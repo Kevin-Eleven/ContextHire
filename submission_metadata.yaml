@@ -1,0 +1,86 @@
+# Redrob Hackathon — Submission Metadata
+# Senior AI Engineer (Founding Team) candidate-ranking submission.
+# Technical fields below reflect the actual code/runs; identity fields marked TODO are for you to fill.
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "Unknown"
+
+primary_contact:
+  name: "Haris Ahmad"
+  email: "harisahmad200411@gmail.com"
+  phone: "+91-7007524110" # TODO — used only for top-50/top-10 outreach
+
+team_members:
+  - name: "Haris Ahmad"
+    email: "harisahmad200411@gmail.com"
+    role: "ML Engineer" # solo
+  - name: "Sripada Manaswini"
+    email: "sripadamanaswini9@gmail.com"
+    role: "Data Engineer"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/kevin-eleven/ContextHire" # TODO — make reachable before Stage 3
+sandbox_link: "https://huggingface.co/spaces/TODO_USERNAME/contexthire-ranker" # TODO — deploy (see README)
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+# Streams 100K profiles, ranks, writes submission.csv. Measured: 31s wall / 55 MB peak RSS,
+# CPU-only, no network. The precomputed embedding artifacts in data/*.npy ship in the repo.
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Local Linux box"
+  cpu_cores: 12
+  ram_gb: 16 # runs comfortably within 16 GB (measured peak ~55 MB)
+  python_version: "3.12.3"
+  os: "Ubuntu 24.04 LTS"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true # embeddings + BM25 precomputed offline (declared below)
+  pre_computation_time_minutes: 8 # precompute_embeddings.py: ~8 min, CPU, BAAI/bge-small-en-v1.5
+
+# What the precomputation does (transparency): precompute_embeddings.py embeds the top-12000
+# candidates (by rubric) with BAAI/bge-small-en-v1.5 and computes BM25 over their career text vs the
+# fixed JD, writing data/{embeddings,candidate_ids,jd_embedding,bm25}.npy (~9.6 MB, shipped in repo).
+# rank.py loads those at ranking time — no model and no network are needed during ranking.
+# calibrate.py (offline) measures the dataset constants the ranker's thresholds are tuned to.
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Github Copilot"
+
+ai_usage_summary: |
+  Used Github Copilot as a pair-programmer for architecture discussion, code review, and drafting/refactoring the Python pipeline and its documentation. All design decisions, thresholds, and the final code were author-reviewed. No candidate data was ever sent to any LLM — embeddings are computed locally with an open-source sentence-transformer, and ranking is fully offline.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Explainable hybrid cascade. The skills[] array is treated as adversarial (the JD's stated trap),
+  so ranking is driven by career_history titles/descriptions and summary, never by self-reported
+  skills. Stages: (0) a conservative honeypot filter excludes internally-impossible profiles to avoid
+  the >10% DQ; the positive fit score blends (A) semantic recall — BAAI/bge-small-en-v1.5 dense
+  cosine + BM25 over career text vs the JD, precomputed offline — with (B) a JD rubric (role tier,
+  retrieval/ranking evidence, 5-9y experience, pre-2022 ML, location) and (C) a skill-trust term that
+  credits a claimed skill only when its name actually appears in the career text. Bounded penalty
+  factors and a (D) behavioral availability multiplier (notice period, open-to-work, activity) then
+  adjust the score. Every threshold is calibrated to the measured data distribution (calibrate.py).
+  The top 100 get feature-driven reasoning that cites specific corroborated facts. Runs in ~31s for
+  100K candidates on CPU, ~55 MB RAM, no network.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true # verified 0 honeypots in the top 100
+  reproduction_tested: true
