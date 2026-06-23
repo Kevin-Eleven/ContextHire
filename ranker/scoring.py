@@ -1,7 +1,5 @@
 """JD rubric scorer.
-Design: a weighted sum of positive components (what the JD wants) multiplied by bounded penalty
-factors (what the JD explicitly does NOT want). `score_rubric` returns both the scalar and a
-component breakdown so Stage 6 can ground its reasoning and we can debug rankings.
+Design: a weighted sum of positive components (what the JD wants) multiplied by bounded penalty factors (what the JD explicitly does NOT want). `score_rubric` returns both the scalar and a component breakdown so Stage 6 can ground its reasoning and we can debug rankings.
 """
 
 from __future__ import annotations

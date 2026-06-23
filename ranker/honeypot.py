@@ -1,14 +1,16 @@
 """Honeypot Impossibility Filter
 The dataset contains ~80 honeypots: "subtly impossible profiles. It targets *internal logical impossibility* (a contradiction a real profile cannot have), which is distinct from keyword-stuffing / role mismatch (handled by scoring.py).
-CALIBRATION (measured on the full 100K pool): most "impossibility-looking" fields are just synthetic-data conventions and fire on 10-20% of candidates — useless as honeypot signals:
-  - expected_salary min > max          → 18.9% of candidates (a data convention, NOT a honeypot)
-  - last_active_date < signup_date     → 7.5%
+CALIBRATION — every figure below is measured by calibrate.py over the full 100K pool (run
+`.venv/bin/python calibrate.py`, see calibration_report.txt). Most "impossibility-looking" fields
+are just synthetic-data conventions and fire on 8-20% of candidates — useless as honeypot signals:
+  - expected_salary min > max          → 18.86% of candidates (a data convention, NOT a honeypot)
+  - last_active_date < signup_date     → 7.50%
   - skill duration_months > yoe*12      → smooth noise (skill durations are independently sampled)
-  - skill anachronism                  → dead (skill durations are capped at ~96mo)
-Two signals, by contrast, are razor-clean — 99.99% of the pool sits in a tight band and a tiny
+  - skill anachronism                  → dead (skill durations are capped at 96mo, per calibrate.py)
+Two signals, by contrast, are razor-clean — ~99.9% of the pool sits in a tight band and a tiny
 tail jumps far past it, exactly the planted impossibilities:
-  - duration_months vs the role's start->end span: 99.99% match within 0.8mo; tail reaches 188mo.
-  - years_of_experience vs documented career span: 99.95% within 0.8y; tail reaches ~13y.
+  - duration_months vs the role's start->end span: 99.88% match within 0.8mo; tail reaches 189mo.
+  - years_of_experience vs documented career span: 99.90% within 0.8y; tail reaches ~13y.
 Those two (plus the trivially-true is_current/end_date contradiction) catch 44 profiles with no
 false positives. We deliberately under-claim rather than risk evicting a genuine candidate.
 """

@@ -1,5 +1,4 @@
-"""Stage C — skill-trust correction (anti-stuffing).
-
+"""Skill-trust correction (anti-stuffing).
 This is the one stage that *reads* skills[] — but only as corroboration, never as evidence of fit
 (the JD's stated trap). The principle that ties the whole system together: a self-reported skill is
 trustworthy only to the degree the candidate's actual career corroborates it. The decisive signal is
@@ -7,9 +6,11 @@ whether the skill name appears in the career text — a keyword-stuffer's "embed
 claims never surface in their marketing/HR job descriptions, so they earn ~no trust; a genuine ML
 engineer's relevant skills are all over their role descriptions.
 
-CALIBRATION (15K sample): endorsements med 8 / p90 15 · duration med 16mo / p90 33 · assessment present
-for only ~4% of skills (rare → strong when high) · proficiency "expert" is 0.14% of skills (notable).
-So career-text presence is weighted highest, with assessment/endorsements/duration as secondary boosts.
+CALIBRATION — measured by calibrate.py over all 960,302 skills in the full 100K pool (run
+`.venv/bin/python calibrate.py`, see calibration_report.txt): endorsements med 8 / p90 15 ·
+duration med 16mo / p90 33 · assessment present for only 3.7% of skills (rare → strong when high) ·
+proficiency "expert" is 0.14% of skills (notable). So career-text presence is weighted highest, with
+assessment/endorsements/duration as secondary boosts.
 
 Returns a trust score in [0,1] (a positive pillar in the blend, config.WEIGHTS["skill_trust"]) plus the
 names of the best-corroborated JD-relevant skills, which Stage 6 reasoning cites by name.
@@ -44,9 +45,9 @@ def _corroboration(skill: dict, career_text: str) -> float:
     a = skill["assessment"]
     if a is not None:
         c += 0.3 if a >= 55 else (0.15 if a >= 40 else 0.0)
-    if skill["endorsements"] >= 12:  # top-decile peer endorsement
+    if skill["endorsements"] >= 12:  # near p90=15 (calibrate.py) — top-decile peer endorsement
         c += 0.15
-    if skill["duration_months"] >= 24:
+    if skill["duration_months"] >= 24:  # well above med=16mo, approaching p90=33 (calibrate.py)
         c += 0.10
     return min(1.0, c)
 
