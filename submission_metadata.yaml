@@ -54,10 +54,13 @@ compute:
 # AI tools declaration
 # ============================================================================
 ai_tools_used:
-  - "Github Copilot"
+  - "ChatGpt" # Used for architecture and workflow discussion
+  - "Github Copilot" # Used for docString, and refracting boilerplate code
 
 ai_usage_summary: |
-  Used Github Copilot as a pair-programmer for architecture discussion, code review, and drafting/refactoring the Python pipeline and its documentation. All design decisions, thresholds, and the final code were author-reviewed. No candidate data was ever sent to any LLM — embeddings are computed locally with an open-source sentence-transformer, and ranking is fully offline.
+  - "Used ChatGPT to discuss architecture and workflow, and to get suggestions for code structure and design patterns."
+  - "Used GitHub Copilot to assist with docstrings and to refactor boilerplate code, improving code readability and maintainability."
+  - "No data was shared with any AI tools, and no AI tools were used to generate the final ranking results."
 
 # ============================================================================
 # Approach summary
