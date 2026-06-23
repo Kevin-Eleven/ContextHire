@@ -1,10 +1,7 @@
-"""Stage D — behavioral availability modifier.
-
-The `redrob_signals` block describes *availability / responsiveness*, not fit (constraint.md §6,
-the signals doc): how reachable, active, and hireable a candidate is right now. The plan is explicit
+"""
+The `redrob_signals` block describes *availability / responsiveness*, not fit. How reachable, active, and hireable a candidate is right now. The plan is explicit
 that this is a **bounded multiplier applied on top of the rubric**, never a weighted addend — it
-breaks ties among similar-fit candidates and down-weights the unavailable, but must never let
-availability outrank genuine fit. So we model it as 1.0 minus *named* availability deductions,
+breaks ties among similar-fit candidates and down-weights the unavailable, but must never let availability outrank genuine fit. So we model it as 1.0 minus *named* availability deductions,
 clamped to a floor (config.BEHAVIORAL_MODIFIER_FLOOR = 0.5): a strong, reachable candidate keeps
 their full rubric score (×1.0, no reshuffling of the fit elite); only real concerns pull it down.
 
@@ -14,8 +11,7 @@ CALIBRATION (measured on 20K of the pool, so cliffs sit at real distribution poi
   notice_period_days 15-150 (med 90) · saved_by_recruiters_30d 0-76 (med 7)
   open_to_work true for 35% · willing_to_relocate true for 28%
 
-Each deduction returns a human-readable note; Stage 6 reuses those notes verbatim as the reasoning's
-"concern" clause, so the modifier and the explanation can never disagree.
+Each deduction returns a human-readable note.
 """
 
 from __future__ import annotations

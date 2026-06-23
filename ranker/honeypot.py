@@ -1,12 +1,6 @@
-"""Stage 0 — honeypot / impossibility filter.
-
-The dataset contains ~80 honeypots: "subtly impossible profiles." Having >10% of them in the
-top 100 is an automatic disqualification (constraint.md §4), so this filter is a survival gate,
-not a quality tweak. It targets *internal logical impossibility* (a contradiction a real profile
-cannot have), which is distinct from keyword-stuffing / role mismatch (handled by scoring.py).
-
-CALIBRATION (measured on the full 100K pool): most "impossibility-looking" fields are just
-synthetic-data conventions and fire on 10-20% of candidates — useless as honeypot signals:
+"""Honeypot Impossibility Filter
+The dataset contains ~80 honeypots: "subtly impossible profiles. It targets *internal logical impossibility* (a contradiction a real profile cannot have), which is distinct from keyword-stuffing / role mismatch (handled by scoring.py).
+CALIBRATION (measured on the full 100K pool): most "impossibility-looking" fields are just synthetic-data conventions and fire on 10-20% of candidates — useless as honeypot signals:
   - expected_salary min > max          → 18.9% of candidates (a data convention, NOT a honeypot)
   - last_active_date < signup_date     → 7.5%
   - skill duration_months > yoe*12      → smooth noise (skill durations are independently sampled)
@@ -46,7 +40,9 @@ def honeypot_reasons(f: dict) -> list[str]:
     #    that ends before it starts. For a current role the span runs to the reference date.
     for c in f["careers"]:
         if c["is_current"] and c["end_date_raw"] not in (None, ""):
-            reasons.append(f"is_current but end_date={c['end_date_raw']} ({c['title']})")
+            reasons.append(
+                f"is_current but end_date={c['end_date_raw']} ({c['title']})"
+            )
         start = c["start_date"]
         end = REFERENCE_DATE if c["is_current"] else c["end_date"]
         if start and end and c["duration_months"] > 0:
@@ -56,7 +52,8 @@ def honeypot_reasons(f: dict) -> list[str]:
             elif c["duration_months"] - span > DURATION_SPAN_TOLERANCE_MONTHS:
                 reasons.append(
                     f"duration {c['duration_months']}mo but dates span only ~{span:.0f}mo "
-                    f"({c['title']})")
+                    f"({c['title']})"
+                )
 
     # 2. Claimed experience far exceeds the documented career span — only when career_history is
     #    NOT truncated (so deep, truncated histories are never falsely flagged).
@@ -66,7 +63,8 @@ def honeypot_reasons(f: dict) -> list[str]:
         if f["years_of_experience"] - documented_span > YOE_SPAN_TOLERANCE_YEARS:
             reasons.append(
                 f"claims {f['years_of_experience']:.0f}y experience but career is "
-                f"documented over only ~{documented_span}y")
+                f"documented over only ~{documented_span}y"
+            )
 
     return reasons
 

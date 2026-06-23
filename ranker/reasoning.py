@@ -1,13 +1,7 @@
-"""Stage 6 — feature-driven reasoning generator.
-
-The reasoning column is human-graded (constraint.md): it must cite *specific* facts (years, title,
-named corroborated skills, signal values), connect to a JD requirement, raise a concern *only when a
-real gap exists*, vary between rows, never hallucinate, and tone-match the rank. Every clause here is
-conditioned on a computed feature, so the text can only ever state what the data supports.
-
+"""feature-driven reasoning generator.
+Every clause here is conditioned on a computed feature, so the text can only ever state what the data supports.
 Variation and tone-matching fall out of the data: different candidates trip different clauses, and the
-confidence word + whether concerns surface is banded by rank. The concern clauses are pulled from the
-SAME signals that drove the score (penalty factors, availability notes, band edges), so the explanation
+confidence word + whether concerns surface is banded by rank. The concern clauses are pulled from the SAME signals that drove the score (penalty factors, availability notes, band edges), so the explanation
 can never contradict the ranking.
 """
 
@@ -42,7 +36,9 @@ def _concerns(f: dict, comp: dict, trust: float, avail_notes: list[str]) -> list
     if pen["consulting"] < 1.0:
         out.append("services-firm-heavy background")
     if pen["noncoding"] < 1.0:
-        out.append("recent title leans toward architecture/management, not hands-on code")
+        out.append(
+            "recent title leans toward architecture/management, not hands-on code"
+        )
     if pen["domain"] < 1.0:
         out.append("core domain is CV/speech/robotics with limited NLP/IR")
     if pen["stability"] < 1.0:
@@ -73,7 +69,9 @@ def generate_reasoning(
     text = f"{f['career_text']} {f['summary']} {f['headline']}".lower()
 
     # Confidence word, banded by rank (tone-match-rank).
-    lead_word = "Excellent fit" if rank <= 10 else "Strong fit" if rank <= 40 else "Solid fit"
+    lead_word = (
+        "Excellent fit" if rank <= 10 else "Strong fit" if rank <= 40 else "Solid fit"
+    )
 
     # Order by specificity: the core category clause, then the candidate's OWN corroborated skills
     # (the most varied, fact-rich clause), then broader signals. Named skills give each row a
@@ -87,9 +85,13 @@ def generate_reasoning(
         strengths.append("pre-2022 ML foundation, not just recent LLM tooling")
     strengths.extend(cats[1:])  # vector-search infra etc., if room remains
     if comp["nice_to_have"] >= 0.6:
-        strengths.append("nice-to-haves present (LoRA/LTR/OSS or distributed-systems exposure)")
+        strengths.append(
+            "nice-to-haves present (LoRA/LTR/OSS or distributed-systems exposure)"
+        )
     if not strengths and comp["semantic"] >= 0.55:
-        strengths.append("profile aligns semantically with the JD's retrieval/ranking mandate")
+        strengths.append(
+            "profile aligns semantically with the JD's retrieval/ranking mandate"
+        )
 
     # JD connection — pick the most relevant hook (varies by the strongest strength).
     if cats and "both retrieval and ranking" in cats[0]:
@@ -100,7 +102,9 @@ def generate_reasoning(
         hook = "aligns with the production-ML-systems mandate"
 
     head = f"{lead_word}: {title}, {yoe:.0f}y"
-    body = "; ".join(strengths[:3]) if strengths else "general ML engineering background"
+    body = (
+        "; ".join(strengths[:3]) if strengths else "general ML engineering background"
+    )
     sentence = f"{head} — {body}; {hook}."
 
     # Concerns: top ranks only surface a concern if one is material; lower ranks always note the top gap.

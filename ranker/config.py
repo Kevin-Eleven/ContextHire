@@ -1,6 +1,5 @@
 """JD-derived constants and tunable weights.
-
-Everything here encodes the *fixed* job description (Senior AI Engineer — Founding Team, Redrob AI). Keep domain knowledge in this module so scoring logic stays declarative and the Stage-5 interview can point to one place for "why these signals".
+Everything here encodes the *fixed* job description (Senior AI Engineer — Founding Team, Redrob AI). All domain knowledge is kept here.
 """
 
 from __future__ import annotations
@@ -152,14 +151,13 @@ NON_CODING_TITLES = {
     "head of",
 }
 
-# --- Component weights for the final blend (tuned in later stages) -----------------------
-# Stage 1 uses only a placeholder; real weights are exercised from Stage 3 on.
+# --- Component weights for the final blend
 WEIGHTS = {
-    "semantic": 0.35,  # Stage A embedding/BM25
-    "rubric": 0.45,  # Stage B JD rubric
-    "skill_trust": 0.20,  # Stage C corroboration
-    # Stage D behavioral is a bounded multiplier applied on top, not a weighted addend.
+    "semantic": 0.35,  # embedding/BM25
+    "rubric": 0.45,  #  JD rubric
+    "skill_trust": 0.20,  #  Skills corroboration
 }
+
 BEHAVIORAL_MODIFIER_FLOOR = (
     0.5  # worst-case down-weight for the unavailable (never zero)
 )

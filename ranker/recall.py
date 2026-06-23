@@ -1,16 +1,10 @@
-"""Stage A — semantic recall index (ranking-time, numpy-only).
-
+"""Semantic recall index (ranking-time, numpy-only).
 Loads the offline artifacts (precompute_embeddings.py) and exposes one semantic fit score per
 candidate in [0, 1], fusing dense and lexical signals:
   - dense:  cosine(JD, candidate) from the bge-small embeddings, computed here as a single
             [N,384]·[384] matmul (<0.1s for 100K), then min-max normalized across the pool.
   - lexical: precomputed, already-normalized BM25(JD, candidate).
-Fusion is a fixed convex blend (dense-leaning): dense carries the semantic understanding the JD
-demands; BM25 anchors it to the concrete must-have vocabulary so a purely "vibey" summary can't
-float up without the real retrieval/ranking terms in the career text.
-
-No torch, no model, no network — only numpy. If the data/ artifacts are absent (e.g. someone runs
-rank.py before precompute), `available` is False and the caller falls back to the rule rubric.
+Fusion is a fixed convex blend (dense-leaning): dense carries the semantic understanding the JD demands; BM25 anchors it to the concrete must-have vocabulary so a purely "vibey" summary can't float up without the real retrieval/ranking terms in the career text.
 """
 
 from __future__ import annotations

@@ -1,8 +1,4 @@
-"""Streaming I/O for the candidate pool.
-
-The pool is ~465MB / 100K profiles, one JSON object per line. We never materialize the whole
-list; callers iterate and extract features on the fly to stay well under the 16GB limit.
-"""
+"""Streaming I/O for the candidate pool."""
 
 from __future__ import annotations
 
@@ -15,6 +11,7 @@ try:  # orjson is ~2-3x faster than stdlib json on this workload
 
     def _loads(b: bytes | str):
         return _json.loads(b)
+
 except ImportError:  # pragma: no cover - fallback path
     import json as _json
 

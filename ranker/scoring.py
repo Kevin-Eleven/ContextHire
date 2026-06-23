@@ -1,10 +1,4 @@
-"""Stage B — JD rubric scorer.
-Operationalizes the fixed JD (Senior AI Engineer — Founding Team, Redrob AI) into a numeric
-fit score in (0, 1]. The governing principle, stated explicitly by the JD itself: the `skills[]`
-array is an adversarial trap, so fit is judged from *career evidence* — job titles and the
-free-text role descriptions/summary — never from the self-reported skill list. (Skill-list
-corroboration is handled separately as a trust signal in Stage C.)
-
+"""JD rubric scorer.
 Design: a weighted sum of positive components (what the JD wants) multiplied by bounded penalty
 factors (what the JD explicitly does NOT want). `score_rubric` returns both the scalar and a
 component breakdown so Stage 6 can ground its reasoning and we can debug rankings.
