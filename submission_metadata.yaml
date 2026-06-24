@@ -10,12 +10,12 @@ team_name: "Unknown"
 primary_contact:
   name: "Haris Ahmad"
   email: "harisahmad200411@gmail.com"
-  phone: "+91-7007524110" # TODO — used only for top-50/top-10 outreach
+  phone: "+91-7007524110"
 
 team_members:
   - name: "Haris Ahmad"
     email: "harisahmad200411@gmail.com"
-    role: "ML Engineer" # solo
+    role: "ML Engineer"
   - name: "Sripada Manaswini"
     email: "sripadamanaswini9@gmail.com"
     role: "Data Engineer"
@@ -23,8 +23,8 @@ team_members:
 # ============================================================================
 # Code and reproducibility
 # ============================================================================
-github_repo: "https://github.com/kevin-eleven/ContextHire" # TODO — make reachable before Stage 3
-sandbox_link: "https://huggingface.co/spaces/TODO_USERNAME/contexthire-ranker" # TODO — deploy (see README)
+github_repo: "https://github.com/Kevin-Eleven/ContextHire"
+sandbox_link: "https://contexthire.streamlit.app/"
 
 reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
 # Streams 100K profiles, ranks, writes submission.csv. Measured: 31s wall / 55 MB peak RSS,

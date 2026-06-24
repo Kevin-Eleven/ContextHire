@@ -87,20 +87,20 @@ pip install -r requirements-sandbox.txt
 streamlit run app.py            # → http://localhost:8501
 ```
 
-There are two requirements files because the sandbox and the full pipeline have very different
-dependency footprints:
+There are two requirements files, for two different purposes:
 
-- `requirements-sandbox.txt` — what `app.py` actually needs at runtime (streamlit, numpy, orjson).
-  Use this for local sandbox use and for deploying `app.py` to Streamlit Community Cloud.
-- `requirements.txt` — the full set used by the ranking pipeline end to end, including the
-  offline-only embedding/calibration tooling (`sentence-transformers`, `rank-bm25`, `pandas`).
-  `rank.py` itself only imports `numpy`/`orjson` at ranking time; the rest is needed solely to
-  regenerate `data/*.npy` and `calibration_report.txt` (see "Running it" below).
+- `requirements-sandbox.txt` — the minimal deps `app.py` actually needs at runtime (streamlit,
+  numpy, orjson). Use this for a fast local sandbox install.
+- `requirements.txt` — installs everything: the sandbox deps above *plus* the full ranking-pipeline
+  set, including the offline-only embedding/calibration tooling (`sentence-transformers`,
+  `rank-bm25`, `pandas`). `rank.py` itself only imports `numpy`/`orjson` at ranking time; the rest
+  is needed solely to regenerate `data/*.npy` and `calibration_report.txt` (see "Running it" below).
 
-When deploying `app.py` to Streamlit Community Cloud, point its requirements file setting at
-`requirements-sandbox.txt` rather than the root `requirements.txt` — otherwise it will try to
-install `torch`/`sentence-transformers`, which the sandbox doesn't need and which will slow down
-or fail a free-tier deploy.
+Streamlit Community Cloud always installs the root `requirements.txt` next to the app entry point
+and has no separate setting to point at a different file, so the live deploy
+(https://contexthire.streamlit.app/) installs the combined `requirements.txt` — `torch` and
+`sentence-transformers` end up on the deploy image but are never imported by `app.py`, just unused
+weight on the build.
 
 ## Running it
 
