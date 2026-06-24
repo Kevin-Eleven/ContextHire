@@ -8,6 +8,8 @@ The dataset is **adversarial by design**: the highest-density `skills[]` arrays 
 python rank.py --candidates ./candidates.jsonl --out ./submission.csv
 ```
 
+> `candidates.jsonl` (~487MB) is the challenge's own dataset bundle and is intentionally **not** committed to this repo (see ` gitignore`) — GitHub rejects files over 100MB. Place your copy at the repo root before running anything below.
+
 ## Approach — an explainable hybrid cascade
 
 ```
