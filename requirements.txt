@@ -11,3 +11,9 @@ sentence-transformers>=2.2
 
 # Metadata / misc
 pyyaml>=6.0
+
+# Sandbox / hosted-demo dependencies (app.py).
+streamlit>=1.30
+numpy>=1.24
+orjson>=3.9
+
