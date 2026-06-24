@@ -1,20 +1,12 @@
-# ContextHire — Redrob Senior AI Engineer Ranker
+# ContextHire — Redrob Candidate Ranker
 
-Ranks the top 100 of 100,000 candidate profiles against one fixed job description
-(**Senior AI Engineer — Founding Team, Redrob AI**) and emits a validated submission CSV with a
-human-readable reason for every pick.
+Ranks the top 100 of 100,000 candidate profiles against one fixed job description (**Senior AI Engineer — Founding Team, Redrob AI**) and emits a validated submission CSV with a human-readable reason for every pick.
 
-The dataset is **adversarial by design**: the highest-density `skills[]` arrays belong to
-keyword-stuffers, and ~80 "subtly impossible" honeypot profiles will disqualify a submission if more
-than 10% of them reach the top 100. So this ranker treats `skills[]` as untrusted and lets a
-candidate's actual **career history** carry the weight.
+The dataset is **adversarial by design**: the highest-density `skills[]` arrays belong to keyword-stuffers, and ~80 "subtly impossible" honeypot profiles will disqualify a submission if more than 10% of them reach the top 100. So this ranker treats `skills[]` as untrusted and lets a candidate's actual **career history** carry the weight.
 
 ```bash
 python rank.py --candidates ./candidates.jsonl --out ./submission.csv
 ```
-
-Measured: **~31s wall-clock, ~55 MB peak RAM**, CPU-only, no network — well inside the 5-min / 16 GB
-budget.
 
 ## Approach — an explainable hybrid cascade
 
@@ -34,7 +26,7 @@ budget.
   └─ Top 100  →  feature-driven reasoning  →  validate  →  submit
 ```
 
-**Why these choices**
+## **Why these choices**
 
 - **`skills[]` is adversarial.** The decisive fit signals come from `career_history` titles and
   descriptions plus `summary` — evidence of _building_ retrieval/ranking/recsys at product companies.
@@ -70,37 +62,17 @@ data/*.npy               # precomputed artifacts (~9.6 MB, shipped — ranking n
 sanity.py                # local harness: prints top-30 + reasoning, gates on hard checks
 app.py                   # Streamlit sandbox — reuses the production path
 requirements.txt          # full pipeline deps (numpy/orjson + offline-only torch/sentence-transformers/bm25)
-requirements-sandbox.txt # sandbox-only deps for app.py (streamlit + numpy + orjson, no torch)
 job_description.md        # the JD, operationalized into the rubric
 submission_metadata.yaml # portal metadata (declares pre_computation_required: true)
 ```
 
 ## Hosted sandbox
 
-`app.py` is a Streamlit demo that runs the **same** `select_top` pipeline on a candidate sample and
-returns a ranked CSV — the lightweight reproducibility check required by the spec. It can either
-rank the bundled `sample_candidates.json` with a single click, or rank an uploaded `.json`/`.jsonl`
-file of up to 100 candidates.
+`app.py` is a Streamlit demo that runs the **same** `select_top` pipeline on a candidate sample and returns a ranked CSV — the lightweight reproducibility check required by the spec. It can either rank the bundled `sample_candidates.json` with a single click, or rank an uploaded `.json`/`.jsonl` file of up to 100 candidates.
 
 ```bash
-pip install -r requirements-sandbox.txt
-streamlit run app.py            # → http://localhost:8501
+streamlit run app.py
 ```
-
-There are two requirements files, for two different purposes:
-
-- `requirements-sandbox.txt` — the minimal deps `app.py` actually needs at runtime (streamlit,
-  numpy, orjson). Use this for a fast local sandbox install.
-- `requirements.txt` — installs everything: the sandbox deps above *plus* the full ranking-pipeline
-  set, including the offline-only embedding/calibration tooling (`sentence-transformers`,
-  `rank-bm25`, `pandas`). `rank.py` itself only imports `numpy`/`orjson` at ranking time; the rest
-  is needed solely to regenerate `data/*.npy` and `calibration_report.txt` (see "Running it" below).
-
-Streamlit Community Cloud always installs the root `requirements.txt` next to the app entry point
-and has no separate setting to point at a different file, so the live deploy
-(https://contexthire.streamlit.app/) installs the combined `requirements.txt` — `torch` and
-`sentence-transformers` end up on the deploy image but are never imported by `app.py`, just unused
-weight on the build.
 
 ## Running it
 
@@ -130,8 +102,4 @@ python validate_submission.py  submission.csv     # → "Submission is valid."
 | GPU                  | none    | CPU-only                      |
 | Network during rank  | none    | none — `data/*.npy` are local |
 
-Offline precomputation is **declared** in `submission_metadata.yaml`
-(`pre_computation_required: true`, ~8 min): `precompute_embeddings.py` embeds the top-12000
-candidates by rubric with `BAAI/bge-small-en-v1.5` and computes BM25 over their career text against
-the fixed JD. `rank.py` loads only the resulting `data/*.npy` and runs fully offline — if those
-artifacts are absent it degrades gracefully to a rubric-only ranking.
+Offline precomputation is **declared** in `submission_metadata.yaml` (`pre_computation_required: true`, ~8 min): `precompute_embeddings.py` embeds the top-12000 candidates by rubric with `BAAI/bge-small-en-v1.5` and computes BM25 over their career text against the fixed JD. `rank.py` loads only the resulting `data/*.npy` and runs fully offline — if those artifacts are absent it degrades gracefully to a rubric-only ranking.
