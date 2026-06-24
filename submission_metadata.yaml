@@ -36,7 +36,7 @@ reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submi
 compute:
   platform: "Local Linux box"
   cpu_cores: 12
-  ram_gb: 16 # runs comfortably within 16 GB (measured peak ~55 MB)
+  ram_gb: 16 # runs comfortably within 16 GB
   python_version: "3.12.3"
   os: "Ubuntu 24.04 LTS"
   uses_gpu_for_inference: false
@@ -54,11 +54,11 @@ compute:
 # AI tools declaration
 # ============================================================================
 ai_tools_used:
-  - "ChatGPT" # Used for architecture and workflow discussion
+  - "ChatGPT & Claude" # Used for architecture and workflow discussion
   - "GitHub Copilot" # Used for docstrings, and refactoring boilerplate code
 
 ai_usage_summary: |
-  - "Used ChatGPT to discuss architecture and workflow, and to get suggestions for code structure and design patterns."
+  - "Used ChatGPT & Claude to discuss architecture and workflow, and to get suggestions for code structure and design patterns."
   - "Used GitHub Copilot to assist with docstrings and to refactor boilerplate code, improving code readability and maintainability."
   - "No data was shared with any AI tools, and no AI tools were used to generate the final ranking results."
 
