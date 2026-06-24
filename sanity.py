@@ -1,15 +1,5 @@
-#!/usr/bin/env python3
-"""Local sanity harness — the only feedback loop we have (no live leaderboard, 3 submissions).
-
-Runs the real ranking pipeline and eyeballs the result the way a human grader will at Stage 4:
-prints the top-30 with their reasoning, then runs automated red-flag checks that would cost us the
-competition if they slipped through — a honeypot or an obvious non-fit (a "Marketing Manager") in the
-top 100, a broken score gradient, or a malformed submission.
-
-    .venv/bin/python sanity.py                            # full pool (./candidates.jsonl)
-    .venv/bin/python sanity.py --candidates sample_candidates.json --top-n 30
-
-Exits non-zero if any hard check fails, so it doubles as a pre-submission gate.
+"""Local sanity harness
+Runs the real ranking pipeline and eyeballs the result and prints the top-30 with their reasoning, then runs automated red-flag checks.
 """
 
 from __future__ import annotations
@@ -22,8 +12,6 @@ from ranker.honeypot import honeypot_reasons
 from ranker.scoring import _title_tier
 from rank import select_top
 
-# A top-ranked candidate whose best title across their career still lands in the non-fit tier is a
-# red flag — exactly the keyword-stuffer trap (great skills[], unrelated job titles).
 _NONFIT_TITLE = 0.05
 
 
@@ -38,8 +26,10 @@ def run(path: str, top_n: int) -> int:
     print(f"\n=== TOP {min(30, len(ranked))} (of {len(ranked)} ranked) ===\n")
     for i, rec in enumerate(ranked[:30], start=1):
         f = rec["f"]
-        print(f"{i:>3}. {rec['score']:.4f}  {rec['candidate_id']}  "
-              f"{f['current_title']!r} · {f['years_of_experience']:.0f}y · {f['location']}")
+        print(
+            f"{i:>3}. {rec['score']:.4f}  {rec['candidate_id']}  "
+            f"{f['current_title']!r} · {f['years_of_experience']:.0f}y · {f['location']}"
+        )
         print(f"      {rec['reasoning']}")
 
     # ---- hard checks (failing any of these should block a submission) ----
@@ -47,7 +37,9 @@ def run(path: str, top_n: int) -> int:
 
     honeypots = [r["candidate_id"] for r in ranked if honeypot_reasons(r["f"])]
     if honeypots:
-        failures.append(f"{len(honeypots)} honeypot(s) in the ranked set: {honeypots[:5]}")
+        failures.append(
+            f"{len(honeypots)} honeypot(s) in the ranked set: {honeypots[:5]}"
+        )
 
     nonfit = [
         (r["candidate_id"], r["f"]["current_title"])
@@ -55,25 +47,35 @@ def run(path: str, top_n: int) -> int:
         if _best_title_tier(r["f"]) <= _NONFIT_TITLE
     ]
     if nonfit:
-        failures.append(f"{len(nonfit)} non-fit title(s) in the ranked set: {nonfit[:5]}")
+        failures.append(
+            f"{len(nonfit)} non-fit title(s) in the ranked set: {nonfit[:5]}"
+        )
 
     scores = [r["score"] for r in ranked]
     if scores != sorted(scores, reverse=True):
         failures.append("scores are not non-increasing by rank (validator will reject)")
     if len(set(scores)) < max(1, len(scores) // 2):
-        failures.append(f"score gradient is flat ({len(set(scores))} distinct of {len(scores)}) — weak NDCG")
+        failures.append(
+            f"score gradient is flat ({len(set(scores))} distinct of {len(scores)}) — weak NDCG"
+        )
 
     reasonings = [r["reasoning"] for r in ranked]
     dup = len(reasonings) - len(set(reasonings))
     if dup > len(reasonings) * 0.1:
-        failures.append(f"{dup} duplicate reasoning strings (>10%) — grader penalizes repetition")
+        failures.append(
+            f"{dup} duplicate reasoning strings (>10%) — grader penalizes repetition"
+        )
 
     # ---- soft stats (informational) ----
     n_concern = sum(1 for r in reasonings if "Concern:" in r)
     print("\n=== SANITY ===")
-    print(f"  ranked={len(ranked)}  distinct_scores={len(set(scores))}  "
-          f"score_range={min(scores):.4f}-{max(scores):.4f}")
-    print(f"  distinct_reasonings={len(set(reasonings))}/{len(reasonings)}  with_concern={n_concern}")
+    print(
+        f"  ranked={len(ranked)}  distinct_scores={len(set(scores))}  "
+        f"score_range={min(scores):.4f}-{max(scores):.4f}"
+    )
+    print(
+        f"  distinct_reasonings={len(set(reasonings))}/{len(reasonings)}  with_concern={n_concern}"
+    )
     print(f"  honeypots_in_top={len(honeypots)}  nonfit_titles_in_top={len(nonfit)}")
 
     if failures:
@@ -86,7 +88,9 @@ def run(path: str, top_n: int) -> int:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Eyeball + gate the ranking before submitting.")
+    ap = argparse.ArgumentParser(
+        description="Eyeball + gate the ranking before submitting."
+    )
     ap.add_argument("--candidates", default=config.DEFAULT_CANDIDATES)
     ap.add_argument("--top-n", type=int, default=config.TOP_N)
     args = ap.parse_args()

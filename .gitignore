@@ -6,6 +6,9 @@ India_runs_data_and_ai_challenge/
 candidates.jsonl
 candidates.jsonl.gz
 
+
+submission_metadata_template.yaml
+
 # Python
 __pycache__/
 *.pyc

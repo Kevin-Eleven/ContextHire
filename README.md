@@ -68,9 +68,39 @@ ranker/
   config.py              # JD-derived constants and blend weights
 data/*.npy               # precomputed artifacts (~9.6 MB, shipped — ranking needs no network)
 sanity.py                # local harness: prints top-30 + reasoning, gates on hard checks
+app.py                   # Streamlit sandbox — reuses the production path
+requirements.txt          # full pipeline deps (numpy/orjson + offline-only torch/sentence-transformers/bm25)
+requirements-sandbox.txt # sandbox-only deps for app.py (streamlit + numpy + orjson, no torch)
 job_description.md        # the JD, operationalized into the rubric
 submission_metadata.yaml # portal metadata (declares pre_computation_required: true)
 ```
+
+## Hosted sandbox
+
+`app.py` is a Streamlit demo that runs the **same** `select_top` pipeline on a candidate sample and
+returns a ranked CSV — the lightweight reproducibility check required by the spec. It can either
+rank the bundled `sample_candidates.json` with a single click, or rank an uploaded `.json`/`.jsonl`
+file of up to 100 candidates.
+
+```bash
+pip install -r requirements-sandbox.txt
+streamlit run app.py            # → http://localhost:8501
+```
+
+There are two requirements files because the sandbox and the full pipeline have very different
+dependency footprints:
+
+- `requirements-sandbox.txt` — what `app.py` actually needs at runtime (streamlit, numpy, orjson).
+  Use this for local sandbox use and for deploying `app.py` to Streamlit Community Cloud.
+- `requirements.txt` — the full set used by the ranking pipeline end to end, including the
+  offline-only embedding/calibration tooling (`sentence-transformers`, `rank-bm25`, `pandas`).
+  `rank.py` itself only imports `numpy`/`orjson` at ranking time; the rest is needed solely to
+  regenerate `data/*.npy` and `calibration_report.txt` (see "Running it" below).
+
+When deploying `app.py` to Streamlit Community Cloud, point its requirements file setting at
+`requirements-sandbox.txt` rather than the root `requirements.txt` — otherwise it will try to
+install `torch`/`sentence-transformers`, which the sandbox doesn't need and which will slow down
+or fail a free-tier deploy.
 
 ## Running it
 

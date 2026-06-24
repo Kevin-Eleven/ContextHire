@@ -54,8 +54,8 @@ compute:
 # AI tools declaration
 # ============================================================================
 ai_tools_used:
-  - "ChatGpt" # Used for architecture and workflow discussion
-  - "Github Copilot" # Used for docString, and refracting boilerplate code
+  - "ChatGPT" # Used for architecture and workflow discussion
+  - "GitHub Copilot" # Used for docstrings, and refactoring boilerplate code
 
 ai_usage_summary: |
   - "Used ChatGPT to discuss architecture and workflow, and to get suggestions for code structure and design patterns."
